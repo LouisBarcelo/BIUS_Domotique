@@ -57,12 +57,12 @@ public:
 		}
 		int timeoutCounter = 0;
 		while (WiFi.status() != WL_CONNECTED) {
-			timeoutCounter++;
 			CAYENNE_LOG("Not connected");
 			delay(100);
-			if (timeoutCounter > 5)
-				ESP.restart();
-			delay(500);
+			if (timeoutCounter > 15)
+				ESP.deepSleep(5e6); // 5e6 is 5 seconds				 Modify time to sleep for on error conencting here
+			delay(1000);
+			timeoutCounter++;
 		}
 		CAYENNE_LOG("Connected to WiFi");
 

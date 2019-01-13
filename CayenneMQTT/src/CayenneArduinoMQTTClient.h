@@ -54,25 +54,25 @@ public:
 	void connect() {
 		CAYENNE_LOG("Connecting to %s:%d", CAYENNE_DOMAIN, CAYENNE_PORT);
 		int error = MQTT_FAILURE;
-		int i = 0;
+		int timeoutCounter = 0;
 		do {
 			if (!NetworkConnect(&_network, CAYENNE_DOMAIN, CAYENNE_PORT)) {
-				if (i > 10) {
+				if (timeoutCounter > 15) {
 					CAYENNE_LOG("Network connect failed");
-					ESP.restart();
+					ESP.deepSleep(5e6); // 5e6 is 5 seconds				 Modify time to sleep for on error conencting here
 				}
 				delay(1000);
 			}
 			else if ((error = CayenneMQTTConnect(&_mqttClient)) != MQTT_SUCCESS) {
 											CAYENNE_LOG("MQTT connect failed, error %d", error);
 				NetworkDisconnect(&_network);
-				if (i > 10){
+				if (timeoutCounter > 15){
 					CAYENNE_LOG("Network connect failed");
-					ESP.restart();
+					ESP.deepSleep(5e6); // 5e6 is 5 seconds				 Modify time to sleep for on error conencting here
 				}
 				delay(1000);
 			}
-			i++;
+			timeoutCounter++;
 		}
 		while (error != MQTT_SUCCESS);
 
