@@ -3,7 +3,7 @@ const int FW_VERSION = 2;                                                       
 #include <ESP8266HTTPClient.h>
 #include <ESP8266httpUpdate.h>
 // Note the raw.githubuserconent, this allows us to access the contents at the url, not the webpage itself
-const char* fwURLBase = "https://raw.githubusercontent.com/BIUS-UdeS/biusOTAesp/master/exampleesp/ESPOTAexample"; // IP adress to the subfolder containing the binary and version number for this specific device
+const char* fwURLBase = "https://raw.githubusercontent.com/BIUS-USherbrooke/BIUS_Domotique/master/Modules/ESPOTAexample/ESPOTAexample"; // IP adress to the subfolder containing the binary and version number for this specific device
 
 /************************************** CAYENNE *****************************************/
 #define CAYENNE_PRINT Serial               
