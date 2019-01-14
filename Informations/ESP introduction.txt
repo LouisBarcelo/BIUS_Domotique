@@ -1,0 +1,85 @@
+ESP8266 de NODE MCU ESP12
+
+Installation
+**********************************************************************
+-Installer les bibliothèques arduino ESP8266
+-Installer le board dans Additional Board Manager URLS
+Fichier>Préférences>URL de gestionnaire de cartes supplémentaires
+http://arduino.esp8266.com/stable/package_esp8266com_index.json
+
+-Télécharger le Driver USB si la communication de fonctionne pas
+
+Vérifier les options de compilation et téléversement:
+-Vitesse de televersement max
+-Type de carte Node MCU esp module E12
+-Programmateur Bus pirate as ISP
+
+
+Bibliothèques nécessaires
+***********************************************************************
+CayenneMQTT by MyDevices
+Adafruit Unified Sensors by Adafruit
+
+
+L'en tête afin d'avoir un programme qui compile et utilise la communication MQTT cayenne
+***********************************************************************
+//#define CAYENNE_DEBUG
+#define CAYENNE_PRINT Serial                 //wifi
+#include <CayenneMQTTESP8266.h>
+#include <DHT.h>  // DHTsensor
+
+
+// WiFi network info.
+char ssid[] = "SmartRGE1BB";
+char wifiPassword[] = "s9003502";
+
+// Cayenne authentication info. This should be obtained from the Cayenne Dashboard.
+char username[] = "6e7efa60-b6a3-11e8-a5e0-433900986fca";
+char password[] = "70a3b8c6b91c0e52f4341fa54b8b3f87bfc0d0f5";
+char clientID[] = "1dd07ff0-b6a6-11e8-9207-895fcb08b269";
+
+void setup() {
+  // put your setup code here, to run once:
+  Cayenne.begin(username,password,clientID,ssid,wifiPassword);
+}
+
+La loop du arduino appellera celle de cayenne, où on fait les cayenne_IN et out
+***********************************************************************
+void loop() {
+  // put your main code here, to run repeatedly:
+  Cayenne.loop();
+
+}
+
+
+Les loops de cayenne sont comme suit
+***********************************************************
+  CAYENNE_OUT(V4)
+{
+  CAYENNE_LOG("Data requested for Virtual Pin %d", V4);
+  Cayenne.virtualWrite(V3, dht.readHumidity(true));
+}
+
+CAYENNE_IN(D4)
+{
+  // Parse the LED data received from the dashboard
+  //int new_led_state = getValue.asInt();
+ // digitalWrite(D4,new_led_state);
+}
+
+
+
+
+
+Gestion des datas
+**********************************************************************
+-On peut enregistrer les datas à partir du dashboard de cayenne en CSV
+Pour ouvrir un fichier csv dans excel:
+	-Ouvrir un tableur vierge
+	-Aller sous l'onglet data-> From Text/CSV
+	-Ajouter le fichier au tableur. On peut maintenant analyser les datas avec tous les outils excel.
+	
+
+
+
+
