@@ -9,8 +9,11 @@ On a modifié les librairies.
 
 C'est une bonne idée de faire ce changement à chaque fois que tu pull du nouveau code afin d'avoir la version à jour.
 
-Plan d'architecture haut niveau: https://usherbrooke.sharepoint.com/:o:/r/sites/BIUS2/Documents%20partages/VG360%20PROJET/Domotique/Architecture%20Haut%20NiveauV3?d=w3f831f14a0a0413ba66fc4bb2a6bfc33&csf=1&e=zBldOv
+Plan d'architecture haut niveau:
+
+https://usherbrooke.sharepoint.com/:o:/r/sites/BIUS2/Documents%20partages/VG360%20PROJET/Domotique/Architecture%20Haut%20NiveauV3?d=w3f831f14a0a0413ba66fc4bb2a6bfc33&csf=1&e=zBldOv
 
 Logique d'utilisation de notre Git: https://nvie.com/posts/a-successful-git-branching-model/
-COntactez les admis si vous avez des questions.
+
+Contactez les admis si vous avez des questions.
 
