@@ -7,7 +7,7 @@ int failedConnections = 0;
 #define SLEEP_TIME 20e6
 
 // Temps entre les prises de donnees (en secondes)
-#define DELAIS_PRISE_DONNEES 60 // Secondes
+#define DELAIS_PRISE_DONNEES 10 // Secondes
 unsigned long lastMillis = 0;   // Dernière prise de mesure
 
 // WiFi network info.
@@ -64,6 +64,7 @@ void setup() {
 void loop() {
   if (WiFi.status() == WL_CONNECTED) {
     Cayenne.loop();
+    Serial.println(revFlowSensor);
 
     // Voir s'il y a eu changement du flow (assez pour ajouter un litre de plus)
     if(revFlowSensor > REV_TO_LITRES ) {
@@ -78,11 +79,18 @@ void loop() {
 
       // Si le nombre de révolutions n'a pas changé depuis la dernière mesure, envoyer à Cayenne et reset tout
       if (lastRevFlowSensor == revFlowSensor) {
-        Cayenne.virtualWrite(7, litres);
+        float litresFloat = (float)litres;
+        float temp = (float)revFlowSensor;
+        litresFloat += temp / REV_TO_LITRES;
+        Serial.println(litres);
+        Serial.println(revFlowSensor);
+        Serial.println(litresFloat);
+        Cayenne.virtualWrite(7, litresFloat);
         litres = 0;
         revFlowSensor = 0;
         lastRevFlowSensor = 0;
-      }
+      } else
+        lastRevFlowSensor = revFlowSensor;
 
       // Humidite du sol
       digitalWrite(pinVccSondeHum, HIGH);
