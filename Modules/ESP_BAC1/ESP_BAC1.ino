@@ -1,14 +1,18 @@
-//#define CAYENNE_DEBUG
-#define CAYENNE_PRINT Serial                 //wifi
+/************************************** OTA *****************************************/
+const int FW_VERSION = 1;                                                        // Version number, don't forget to update this on changes
+#include <ESP8266HTTPClient.h>
+#include <ESP8266httpUpdate.h>
+// Note the raw.githubuserconent, this allows us to access the contents at the url, not the webpage itself
+const char* fwURLBase = "https://raw.githubusercontent.com/BIUS-USherbrooke/BIUS_Domotique/ESP_Bac1/Modules/ESP_BAC1/ESP_BAC1"; // IP adress to the subfolder containing the binary and version number for this specific device
+
+/************************************** CAYENNE *****************************************/
+#define CAYENNE_PRINT Serial               
 #include <CayenneMQTTESP8266.h>
 
-// S'il y a trop d'échecs de connection, deep sleep et reset 
+// If too many errors when connecting, deep sleep (which will restart the esp)
+// PIN D0 OF THE NODEMCU MUST BE CONNECTed TO THE RST PIN
 int failedConnections = 0;
 #define SLEEP_TIME 20e6
-
-// Temps entre les prises de donnees (en secondes)
-#define DELAIS_PRISE_DONNEES 10 // Secondes
-unsigned long lastMillis = 0;   // Dernière prise de mesure
 
 // WiFi network info.
 char ssid[] = "SmartRGE1BB";
@@ -17,17 +21,26 @@ char wifiPassword[] = "s9003502";
 // Cayenne authentication info. This should be obtained from the Cayenne Dashboard.
 char username[] = "75b6d920-cb5b-11e8-8a08-61f9e5c4f140";
 char password[] = "13a3664856850223f1994846cd5aa6d668226da9";
-char clientID[] = "a4d64b50-cb5b-11e8-ac9c-271082632120";
+char clientID[] = "b8691bd0-18ee-11e9-a08c-c5a286f8c00d";
 
 // Channels cayenne
+#define VIRTUAL_CHANNEL 98                                                       // Version number
+#define VIRTUAL_CHANNEL 0                                                       // Channel to force an OTA update
+
 #define VIRTUAL_CHANNEL 3     // Humidité du sol
 #define VIRTUAL_CHANNEL 5     // Humidité ambiente
 #define VIRTUAL_CHANNEL 6     // Température ambiente
 #define VIRTUAL_CHANNEL 7     // Litres received
+#define VIRTUAL_CHANNEL 8     // Temperature du sol
+
+/*********************************Donnees********************************************/
+// Temps entre les prises de donnees (en secondes)
+#define DELAIS_PRISE_DONNEES 10 // Secondes
+unsigned long lastMillis = 0;   // Dernière prise de mesure
 
 // Humidite du sol
 int pinHumiditeSol = A0;      // Senseur d'humidite analog
-int pinVccSondeHum = D2;      // D2 pour alimenter la sonde lors de la prise de mesures 
+int pinVccSondeHum = D8;      // D2 pour alimenter la sonde lors de la prise de mesures 
 int humiditeSol = 0;          // Valeur de l'humidite du sol
 
 // DHT22 AM2302 - adafruit dht library + adafruit unified sensors library
@@ -43,6 +56,12 @@ int litres = 0;               // Numbre de litres reçus
 int lastRevFlowSensor = 0;    // La valeur lors de la dernière lecture (pour voir si il y a eu changement)
 #define REV_TO_LITRES 535     // La valeur de caibration du sensor
 
+// Sonde temperature sol
+#include <OneWire.h>
+#include <DallasTemperature.h>
+int tempSolPin = D4;
+OneWire oneWire(tempSolPin); //Setup the onewire instance to communicate with all OneWire devices
+DallasTemperature sondesTempSol(&oneWire); // Pass the OneWire reference to DallasTemperature
 
 void setup() {
   Serial.begin(9600);
@@ -57,14 +76,16 @@ void setup() {
     
   // Attach an interrupt to the ISR vector
   attachInterrupt(digitalPinToInterrupt(flowSensorPin), pin_ISR, RISING);
-   
+
+  sondesTempSol.begin();
+  delay(100);
+     
   Cayenne.begin(username, password, clientID, ssid, wifiPassword);
 }
 
 void loop() {
   if (WiFi.status() == WL_CONNECTED) {
     Cayenne.loop();
-    Serial.println(revFlowSensor);
 
     // Voir s'il y a eu changement du flow (assez pour ajouter un litre de plus)
     if(revFlowSensor > REV_TO_LITRES ) {
@@ -77,8 +98,10 @@ void loop() {
     if (millis() - lastMillis > DELAIS_PRISE_DONNEES*1000) {
       lastMillis = millis();
 
+      Cayenne.virtualWrite(98,FW_VERSION);                                         // Send the version number to Cayenne
+   
       // Si le nombre de révolutions n'a pas changé depuis la dernière mesure, envoyer à Cayenne et reset tout
-      if (lastRevFlowSensor == revFlowSensor) {
+      if (lastRevFlowSensor == revFlowSensor && revFlowSensor != 0) {
         float litresFloat = (float)litres;
         float temp = (float)revFlowSensor;
         litresFloat += temp / REV_TO_LITRES;
@@ -105,6 +128,9 @@ void loop() {
       } else {
         Cayenne.virtualWrite(3, humiditeSol);
       }
+
+      // Temperature du sol
+      readAndSendTempSol();
 
       // DHT readings
       // Reading temperature or humidity takes about 250 milliseconds!
@@ -134,9 +160,46 @@ void loop() {
   }
 }
 
+/***************************************** Cayenne Ins **********************************************/
+// Check for updates on web server
+CAYENNE_IN(0)
+{
+  checkForUpdates();
+}
+
 /***************************************** Flow sensor ****************************************************/
 
 //Interrupt function, so that the counting of pulse “rise ups” dont interfere with the rest of the code  (attachInterrupt)
 void pin_ISR() {   
     revFlowSensor++;
+}
+
+/***************************************** Temp Sol ****************************************************/
+void readAndSendTempSol() {
+  // Lire temperature du sol
+  sondesTempSol.requestTemperatures();
+  // This command writes the temperature in Celsius to the Virtual Pin.
+  float filtre = sondesTempSol.getTempCByIndex(0);
+  if (filtre >= 0)
+     Cayenne.celsiusWrite(8, filtre);
+}
+
+/***************************************** http update function *************************************/
+// This function checks the web server to see if a new version number is available, if so, it updates with the new firmware (binary)
+void checkForUpdates() {
+  String fwImageURL = String(fwURLBase);
+      fwImageURL.concat( ".ino.nodemcu.bin" );                                              // Adds the url for the binary
+      Serial.println(fwImageURL);
+      t_httpUpdate_return ret = ESPhttpUpdate.update( fwImageURL , "", "CC:AA:48:48:66:46:0E:91:53:2C:9C:7C:23:2A:B1:74:4D:29:9D:33");             // Update the esp with the new binary, third is the certificate of the site
+      delay(50);
+
+      switch(ret) {
+        case HTTP_UPDATE_FAILED:
+          Serial.printf("HTTP_UPDATE_FAILED Error (%d): %s", ESPhttpUpdate.getLastError(), ESPhttpUpdate.getLastErrorString().c_str());
+          break;
+
+        case HTTP_UPDATE_NO_UPDATES:
+          Serial.println("no updates");
+          break;
+  }
 }
