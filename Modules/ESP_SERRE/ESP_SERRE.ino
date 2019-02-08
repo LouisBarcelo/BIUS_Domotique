@@ -1,5 +1,5 @@
 /************************************** OTA *****************************************/
-const int FW_VERSION = 2;                                                        // Version number, don't forget to update this on changes
+const int FW_VERSION = 3;                                                        // Version number, don't forget to update this on changes
 #include <ESP8266HTTPClient.h>
 #include <ESP8266httpUpdate.h>
 // Note the raw.githubuserconent, this allows us to access the contents at the url, not the webpage itself
