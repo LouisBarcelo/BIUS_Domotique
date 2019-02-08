@@ -173,7 +173,7 @@ CAYENNE_IN(12)
 
 void checkMonterRideau() {
   // Si rideau est actionné depuis assez longtemps
-  if (millis() - debutMonterRideau >= secondesMonterRideau * 1000) {
+  if (millis() - debutMonterRideau >= secondesMonterRideau * 1000 && monterRideau == true) {
     digitalWrite(pinMoteurMonter, HIGH);
     monterRideau = false;
     rideauPositionHaut = true;
