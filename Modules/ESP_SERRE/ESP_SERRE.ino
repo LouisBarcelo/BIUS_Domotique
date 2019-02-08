@@ -75,18 +75,14 @@ void setup() {
   digitalWrite(pinMoteurMonter, HIGH);
 
   digitalWrite(pinMoteurBaisser, LOW);
-  delay(500);
+
+  while (digitalRead(pinActuateurRideauBas) == LOW) {
+  }
+  rideauPositionHaut = false;
   digitalWrite(pinMoteurBaisser, HIGH);
-
-  if (digitalRead(pinActuateurRideauBas) == HIGH)
-    rideauPositionHaut = false;
-  else
-    rideauPositionHaut = true;
-
   digitalWrite(pinMoteurMonter, LOW);
-  delay(500);
-  digitalWrite(pinMoteurMonter, HIGH);
-    
+  delay(1000);
+  digitalWrite(pinMoteurMonter, HIGH);    
   
   Cayenne.begin(username, password, clientID, ssid, wifiPassword);
 }
