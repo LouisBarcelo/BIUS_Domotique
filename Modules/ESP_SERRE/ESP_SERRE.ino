@@ -56,7 +56,7 @@ int pinActuateurRideauBas = D7;
 int pinMoteurBaisser = D3;
 int pinMoteurMonter = D4;
 unsigned long debutMonterRideau = 0;   // Dernière prise de mesure
-unsigned long secondesMonterRideau = 10;  // Temps pour monter rideau
+unsigned long secondesMonterRideau = 37;  // Temps pour monter rideau
 bool monterRideau = false;
 bool descendreRideau = false;
 
@@ -185,6 +185,7 @@ void checkDescendreRideau() {
   if (digitalRead(pinActuateurRideauBas) == HIGH) {
     digitalWrite(pinMoteurBaisser, HIGH);   // arreter de descendre
     digitalWrite(pinMoteurMonter, LOW);
+    readingActuateurBas = digitalRead(pinActuateurRideauBas);
 
   while (readingActuateurBas != LOW) {
     delay(50);
