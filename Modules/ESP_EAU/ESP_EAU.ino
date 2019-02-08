@@ -69,6 +69,8 @@ bool pumpingState = false;            // Savoir si ca pompe ou pas
 unsigned long floatSuspenduActivation = 0;    // Le temps que le to pa ete trigger
 bool floatPumpingActivated = false;   // Savoir si on est en processus de l'arreter
 
+int luminositePin = A0;
+
 void setup() {
   Serial.begin(9600);
   delay(10);

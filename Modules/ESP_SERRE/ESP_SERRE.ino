@@ -61,6 +61,7 @@ bool monterRideau = false;
 bool descendreRideau = false;
 
 bool rideauPositionHaut = false;  // False pour bas, true pour haut
+int readingActuateurBas = 0;
 
 void setup() {
   Serial.begin(9600);
@@ -76,13 +77,21 @@ void setup() {
 
   digitalWrite(pinMoteurBaisser, LOW);
 
-  while (digitalRead(pinActuateurRideauBas) != HIGH) {
-    delay(10);
+  readingActuateurBas = digitalRead(pinActuateurRideauBas);
+
+  while (readingActuateurBas != HIGH) {
+    delay(50);
+    readingActuateurBas = digitalRead(pinActuateurRideauBas);
   }
   rideauPositionHaut = false;
   digitalWrite(pinMoteurBaisser, HIGH);
+  delay(100);
   digitalWrite(pinMoteurMonter, LOW);
-  delay(1000);
+
+  while (readingActuateurBas != LOW) {
+    delay(50);
+    readingActuateurBas = digitalRead(pinActuateurRideauBas);
+  }
   digitalWrite(pinMoteurMonter, HIGH);    
   
   Cayenne.begin(username, password, clientID, ssid, wifiPassword);
@@ -176,8 +185,12 @@ void checkDescendreRideau() {
   if (digitalRead(pinActuateurRideauBas) == HIGH) {
     digitalWrite(pinMoteurBaisser, HIGH);   // arreter de descendre
     digitalWrite(pinMoteurMonter, LOW);
-    delay(500);
-    digitalWrite(pinMoteurMonter, HIGH);
+
+  while (readingActuateurBas != LOW) {
+    delay(50);
+    readingActuateurBas = digitalRead(pinActuateurRideauBas);
+  }
+  digitalWrite(pinMoteurMonter, HIGH);    
     descendreRideau = false;
     rideauPositionHaut = false;
   }
