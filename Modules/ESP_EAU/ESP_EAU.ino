@@ -151,7 +151,7 @@ CAYENNE_IN(1)
 {
   digitalWrite(solenoide1, LOW);
   solenoide1OpenTime = millis();
-  solenoide1Open = false;
+  solenoide1Open = true;
 }
 
 // Ouvrir solenoide 2
@@ -159,7 +159,7 @@ CAYENNE_IN(2)
 {
   digitalWrite(solenoide2, LOW);
   solenoide2OpenTime = millis();
-  solenoide2Open = false;
+  solenoide2Open = true;
 }
 /***************************************** http update function *************************************/
 // This function checks the web server to see if a new version number is available, if so, it updates with the new firmware (binary)
@@ -244,7 +244,7 @@ void checkWaterLevelSuspendu() {
 /************************************************** solenoides ***************************************************/
 void checkSolenoide1() {
   // Si solenoide 1 a ete ouvert depuis assez longtemps ET i lest ouvert, le fermer
-  if (millis() - solenoide1OpenTime >= solenoide1OpenDuration && solenoide1Open) {
+  if (millis() - solenoide1OpenTime >= solenoide1OpenDuration*1000 && solenoide1Open) {
     digitalWrite(solenoide1, HIGH);
     solenoide1Open = false;
   }
@@ -252,7 +252,7 @@ void checkSolenoide1() {
 
 void checkSolenoide2() {
   // Si solenoide 2 a ete ouvert depuis assez longtemps ET il est ouvert, le fermer
-  if (millis() - solenoide2OpenTime >= solenoide2OpenDuration && solenoide2Open) {
+  if (millis() - solenoide2OpenTime >= solenoide2OpenDuration*1000 && solenoide2Open) {
     digitalWrite(solenoide2, HIGH);
     solenoide2Open = false;
   }
