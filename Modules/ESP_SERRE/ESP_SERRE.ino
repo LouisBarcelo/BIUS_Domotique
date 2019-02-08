@@ -48,10 +48,10 @@ unsigned long lastMillis = 0;   // Dernière prise de mesure
 // DHT22 AM2302 - adafruit dht library + adafruit unified sensors library
 #include "DHT.h"
 #define DHTTYPE DHT22         // Sorte de DHT
-int dhtPin = D1;              // La pin de réception du DHT22
+int dhtPin = D6;              // La pin de réception du DHT22
 DHT dht(dhtPin, DHTTYPE);     // Le dht wrapper
 
-int pinActuateurRideauBas = D2;
+int pinActuateurRideauBas = D7;
 
 int pinMoteurBaisser = D3;
 int pinMoteurMonter = D4;
