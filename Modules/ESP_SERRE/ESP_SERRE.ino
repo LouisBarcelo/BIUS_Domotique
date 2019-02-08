@@ -77,7 +77,7 @@ void setup() {
   digitalWrite(pinMoteurBaisser, LOW);
 
   while (digitalRead(pinActuateurRideauBas) != HIGH) {
-    delay(50);
+    delay(10);
   }
   rideauPositionHaut = false;
   digitalWrite(pinMoteurBaisser, HIGH);
