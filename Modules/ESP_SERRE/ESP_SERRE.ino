@@ -1,5 +1,5 @@
 /************************************** OTA *****************************************/
-const int FW_VERSION = 3;                                                        // Version number, don't forget to update this on changes
+const int FW_VERSION = 4;                                                        // Version number, don't forget to update this on changes
 #include <ESP8266HTTPClient.h>
 #include <ESP8266httpUpdate.h>
 // Note the raw.githubuserconent, this allows us to access the contents at the url, not the webpage itself
@@ -15,8 +15,8 @@ int failedConnections = 0;
 #define SLEEP_TIME 20e6
 
 // WiFi network info.
-char ssid[] = "MotoCoco";
-char wifiPassword[] = "VG360esp";
+char ssid[] = "G4_4797";
+char wifiPassword[] = "liino1ca";
 
 // Cayenne authentication info. This should be obtained from the Cayenne Dashboard.
 char username[] = "75b6d920-cb5b-11e8-8a08-61f9e5c4f140";
