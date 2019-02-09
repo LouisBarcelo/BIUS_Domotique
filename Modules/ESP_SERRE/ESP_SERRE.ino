@@ -56,11 +56,12 @@ int pinActuateurRideauBas = D7;
 int pinMoteurBaisser = D3;
 int pinMoteurMonter = D4;
 unsigned long debutMonterRideau = 0;   // Dernière prise de mesure
-unsigned long secondesMonterRideau = 10;  // Temps pour monter rideau
+unsigned long secondesMonterRideau = 37;  // Temps pour monter rideau
 bool monterRideau = false;
 bool descendreRideau = false;
 
 bool rideauPositionHaut = false;  // False pour bas, true pour haut
+int readingActuateurBas = 0;
 
 void setup() {
   Serial.begin(9600);
@@ -76,13 +77,21 @@ void setup() {
 
   digitalWrite(pinMoteurBaisser, LOW);
 
-  while (digitalRead(pinActuateurRideauBas) != HIGH) {
+  readingActuateurBas = digitalRead(pinActuateurRideauBas);
+
+  while (readingActuateurBas != HIGH) {
     delay(50);
+    readingActuateurBas = digitalRead(pinActuateurRideauBas);
   }
   rideauPositionHaut = false;
   digitalWrite(pinMoteurBaisser, HIGH);
+  delay(100);
   digitalWrite(pinMoteurMonter, LOW);
-  delay(1000);
+
+  while (readingActuateurBas != LOW) {
+    delay(50);
+    readingActuateurBas = digitalRead(pinActuateurRideauBas);
+  }
   digitalWrite(pinMoteurMonter, HIGH);    
   
   Cayenne.begin(username, password, clientID, ssid, wifiPassword);
@@ -164,7 +173,7 @@ CAYENNE_IN(12)
 
 void checkMonterRideau() {
   // Si rideau est actionné depuis assez longtemps
-  if (millis() - debutMonterRideau >= secondesMonterRideau * 1000) {
+  if (millis() - debutMonterRideau >= secondesMonterRideau * 1000 && monterRideau == true) {
     digitalWrite(pinMoteurMonter, HIGH);
     monterRideau = false;
     rideauPositionHaut = true;
@@ -176,8 +185,13 @@ void checkDescendreRideau() {
   if (digitalRead(pinActuateurRideauBas) == HIGH) {
     digitalWrite(pinMoteurBaisser, HIGH);   // arreter de descendre
     digitalWrite(pinMoteurMonter, LOW);
-    delay(500);
-    digitalWrite(pinMoteurMonter, HIGH);
+    readingActuateurBas = digitalRead(pinActuateurRideauBas);
+
+  while (readingActuateurBas != LOW) {
+    delay(50);
+    readingActuateurBas = digitalRead(pinActuateurRideauBas);
+  }
+  digitalWrite(pinMoteurMonter, HIGH);    
     descendreRideau = false;
     rideauPositionHaut = false;
   }
