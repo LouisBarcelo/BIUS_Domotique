@@ -1,5 +1,5 @@
 /************************************** OTA *****************************************/
-const int FW_VERSION = 4;                                                        // Version number, don't forget to update this on changes
+const int FW_VERSION = 5;                                                        // Version number, don't forget to update this on changes
 #include <ESP8266HTTPClient.h>
 #include <ESP8266httpUpdate.h>
 // Note the raw.githubuserconent, this allows us to access the contents at the url, not the webpage itself
@@ -120,7 +120,7 @@ void loop() {
       lastMillis = millis();
 
       //checkWaterLevelUltrason();  // Check Water level and send to cayenne
-      checkWaterLevelSuspendu();  // Check Water level suspendu
+      //checkWaterLevelSuspendu();  // Check Water level suspendu
 
       Cayenne.virtualWrite(10, analogRead(luminositePin));
 
@@ -255,7 +255,6 @@ void checkWaterLevelSuspendu() {
     // Si le float switch est a LOW et que c'est entrain de pomper, attends le temps specifié et arrete de pomper
     // Si on a pas active le warning, active le
     Serial.println("Je pompe et je verifie");
-    // Sinon, active le warning qu'on a détecté et prends le temps de début
     if (millis() - floatSuspenduActivation >= tempsDePompage*1000 || digitalRead(floatSuspendu) == false){
       // sinon, si ca fait assez longtemps qu'on pompe, arrete le pompage pi reset les bools
       digitalWrite(pinPompe, HIGH);
