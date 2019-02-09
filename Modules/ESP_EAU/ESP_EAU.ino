@@ -57,7 +57,7 @@ int echo = D6; // Attach Echo of ultrasonic sensor to pin D6
 // Solenoides
 #define solenoide1 D7
 int solenoide1OpenDuration = 1; // Temps pour ouvrir solenoide 1
-unsigned long solenoide1OpenTime = 0;   // Temps auquel le solenoide 1 a ete ouvert
+unsigned long solenoide1OpenTime = 5;   // Temps auquel le solenoide 1 a ete ouvert
 bool solenoide1Open = false;
 //int solenoide2 = D7;
 //int solenoide2OpenDuration = 1; // Temps pour ouvrir solenoide 2
@@ -119,7 +119,7 @@ void loop() {
     if (millis() - lastMillis > DELAIS_PRISE_DONNEES*1000) {
       lastMillis = millis();
 
-      checkWaterLevelUltrason();  // Check Water level and send to cayenne
+      //checkWaterLevelUltrason();  // Check Water level and send to cayenne
       checkWaterLevelSuspendu();  // Check Water level suspendu
 
       Cayenne.virtualWrite(10, analogRead(luminositePin));
@@ -204,6 +204,7 @@ void checkForUpdates() {
 }
 
 /******************************************** Water level (ultrason) ************************************/
+/*
 void checkWaterLevelUltrason() {
   // Establish variables for duration of the ping,
   long duration, cm;       
@@ -236,7 +237,7 @@ long microsecondsToCentimeters(long microseconds)
   // object we take half of the distance travelled.
   return microseconds / 29 / 2;
 }
-
+*/
 /********************************************** Water level reservoir suspendu ******************************/
 void checkWaterLevelSuspendu() {
   Serial.println("Je check niveau d'eau suspendu");
