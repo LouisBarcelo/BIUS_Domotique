@@ -130,7 +130,7 @@ void loop() {
     if (millis() - lastMillis > DELAIS_PRISE_DONNEES*1000) {
       lastMillis = millis();
 
-      //checkWaterLevelUltrason();  // Check Water level and send to cayenne
+      checkWaterLevelUltrason();  // Check Water level and send to cayenne
       //checkWaterLevelSuspendu();  // Check Water level suspendu
 
       Cayenne.virtualWrite(10, analogRead(luminositePin));
