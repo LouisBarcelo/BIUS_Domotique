@@ -15,8 +15,8 @@ int failedConnections = 0;
 #define SLEEP_TIME 20e6
 
 // WiFi network info.
-char ssid[] = "MotoCoco";
-char wifiPassword[] = "VG360esp";
+char ssid[] = "G4_4797";
+char wifiPassword[] = "liino1ca";
 
 // Cayenne authentication info. This should be obtained from the Cayenne Dashboard.
 char username[] = "75b6d920-cb5b-11e8-8a08-61f9e5c4f140";
@@ -79,22 +79,29 @@ void setup() {
   Serial.println("Esti");
 
   pinMode(floatReservoirPrincipal, INPUT);
+  delay(10);
   pinMode(floatSuspendu, INPUT);
+  delay(10);
   pinMode(pinPompe, OUTPUT);
+  delay(10);
   pinMode(solenoide1, OUTPUT);
+  delay(10);
+  pinMode(trig, OUTPUT);
+  delay(10);
+  pinMode(echo, INPUT);
 
   // Ultrason
-  //pinMode(trig, OUTPUT);
-  delay(100);
+  
   //Serial.println("Esti2");
-  //digitalWrite(trig, LOW);
+  digitalWrite(trig, LOW);
+  delay(10);
   //Serial.println("Esti3");
-  //pinMode(echo, INPUT);
   // Solenoide 1 relais
   //Serial.println("Esti4");
   
   //Serial.println("Esti5");
   digitalWrite(solenoide1, HIGH);
+  delay(10);
   //Serial.println("Esti6");
   // Solenoide 2 relais
   //pinMode(solenoide2, OUTPUT);
@@ -105,6 +112,7 @@ void setup() {
   
   //Serial.println("Esti9");
   digitalWrite(pinPompe, HIGH);
+  delay(10);
   //Serial.println("Esti10");
   // Float sensors
   
@@ -209,7 +217,7 @@ void checkForUpdates() {
 }
 
 /******************************************** Water level (ultrason) ************************************/
-/*
+
 void checkWaterLevelUltrason() {
   // Establish variables for duration of the ping,
   long duration, cm;       
@@ -242,7 +250,7 @@ long microsecondsToCentimeters(long microseconds)
   // object we take half of the distance travelled.
   return microseconds / 29 / 2;
 }
-*/
+
 /********************************************** Water level reservoir suspendu ******************************/
 void checkWaterLevelSuspendu() {
   Serial.println("Je check niveau d'eau suspendu");
