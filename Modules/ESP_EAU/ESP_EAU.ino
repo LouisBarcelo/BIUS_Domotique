@@ -78,33 +78,38 @@ void setup() {
 
   Serial.println("Esti");
 
-  // Ultrason
-  pinMode(trig, OUTPUT);
-  delay(100);
-  Serial.println("Esti2");
-  digitalWrite(trig, LOW);
-  Serial.println("Esti3");
-  pinMode(echo, INPUT);
-  // Solenoide 1 relais
-  Serial.println("Esti4");
+  pinMode(floatReservoirPrincipal, INPUT);
+  pinMode(floatSuspendu, INPUT);
+  pinMode(pinPompe, OUTPUT);
   pinMode(solenoide1, OUTPUT);
-  Serial.println("Esti5");
+
+  // Ultrason
+  //pinMode(trig, OUTPUT);
+  delay(100);
+  //Serial.println("Esti2");
+  //digitalWrite(trig, LOW);
+  //Serial.println("Esti3");
+  //pinMode(echo, INPUT);
+  // Solenoide 1 relais
+  //Serial.println("Esti4");
+  
+  //Serial.println("Esti5");
   digitalWrite(solenoide1, HIGH);
-  Serial.println("Esti6");
+  //Serial.println("Esti6");
   // Solenoide 2 relais
   //pinMode(solenoide2, OUTPUT);
   //Serial.println("Esti7");
   //digitalWrite(solenoide2, HIGH);
   //Serial.println("Esti8");
   // Pompe relais
-  pinMode(pinPompe, OUTPUT);
-  Serial.println("Esti9");
+  
+  //Serial.println("Esti9");
   digitalWrite(pinPompe, HIGH);
-  Serial.println("Esti10");
+  //Serial.println("Esti10");
   // Float sensors
-  pinMode(floatSuspendu, INPUT);
+  
   Serial.println("Esti11");
-  pinMode(floatReservoirPrincipal, INPUT);
+  
 
    Serial.println("Tbk");
    
@@ -113,8 +118,6 @@ void setup() {
 
 void loop() {
   if (WiFi.status() == WL_CONNECTED) {
-    Cayenne.loop();
-
     // S'il y a eu assez de temps, republier les données
     if (millis() - lastMillis > DELAIS_PRISE_DONNEES*1000) {
       lastMillis = millis();
@@ -125,6 +128,8 @@ void loop() {
       Cayenne.virtualWrite(10, analogRead(luminositePin));
 
       Cayenne.virtualWrite(98,FW_VERSION);                                         // Send the version number to Cayenne
+
+      Cayenne.loop();
     }
   } else {
     failedConnections++;
