@@ -1,5 +1,5 @@
 /************************************** OTA *****************************************/
-const int FW_VERSION = 3;                                                        // Version number, don't forget to update this on changes
+const int FW_VERSION = 4;                                                        // Version number, don't forget to update this on changes
 #include <ESP8266HTTPClient.h>
 #include <ESP8266httpUpdate.h>
 // Note the raw.githubuserconent, this allows us to access the contents at the url, not the webpage itself
@@ -55,21 +55,20 @@ int trig = D5; // Attach Trig of ultrasonic sensor to pin D5
 int echo = D6; // Attach Echo of ultrasonic sensor to pin D6
 
 // Solenoides
-int solenoide1 = 9;
+#define solenoide1 D7
 int solenoide1OpenDuration = 1; // Temps pour ouvrir solenoide 1
 unsigned long solenoide1OpenTime = 0;   // Temps auquel le solenoide 1 a ete ouvert
 bool solenoide1Open = false;
-int solenoide2 = D7;
-int solenoide2OpenDuration = 1; // Temps pour ouvrir solenoide 2
-unsigned long solenoide2OpenTime = 0;   // Temps auquel le solenoide 2 a ete ouvert
-bool solenoide2Open = false;
+//int solenoide2 = D7;
+//int solenoide2OpenDuration = 1; // Temps pour ouvrir solenoide 2
+//unsigned long solenoide2OpenTime = 0;   // Temps auquel le solenoide 2 a ete ouvert
+//bool solenoide2Open = false;
 
 // Pompe
 int pinPompe = D3;
-int tempsDePompage = 1;               // Duree de pompage (secondes) apres avoir activer la switch
+int tempsDePompage = 10;               // Duree de pompage (secondes) apres avoir activer la switch
 bool pumpingState = false;            // Savoir si ca pompe ou pas
 unsigned long floatSuspenduActivation = 0;    // Le temps que le to pa ete trigger
-bool floatPumpingActivated = false;   // Savoir si on est en processus de l'arreter
 
 int luminositePin = A0;
 
@@ -82,19 +81,29 @@ void setup() {
   // Ultrason
   pinMode(trig, OUTPUT);
   delay(100);
+  Serial.println("Esti2");
   digitalWrite(trig, LOW);
+  Serial.println("Esti3");
   pinMode(echo, INPUT);
   // Solenoide 1 relais
+  Serial.println("Esti4");
   pinMode(solenoide1, OUTPUT);
+  Serial.println("Esti5");
   digitalWrite(solenoide1, HIGH);
+  Serial.println("Esti6");
   // Solenoide 2 relais
-  pinMode(solenoide2, OUTPUT);
-  digitalWrite(solenoide2, HIGH);
+  //pinMode(solenoide2, OUTPUT);
+  //Serial.println("Esti7");
+  //digitalWrite(solenoide2, HIGH);
+  //Serial.println("Esti8");
   // Pompe relais
   pinMode(pinPompe, OUTPUT);
+  Serial.println("Esti9");
   digitalWrite(pinPompe, HIGH);
+  Serial.println("Esti10");
   // Float sensors
   pinMode(floatSuspendu, INPUT);
+  Serial.println("Esti11");
   pinMode(floatReservoirPrincipal, INPUT);
 
    Serial.println("Tbk");
@@ -130,7 +139,7 @@ void loop() {
   }
   checkWaterLevelSuspendu();  // Check Water level suspendu, pas dans les autres boucles au cas ou on aurait un debordement
   checkSolenoide1();
-  checkSolenoide2();
+  //checkSolenoide2();
 }
 
 /***************************************** Cayenne Ins **********************************************/
@@ -155,12 +164,13 @@ CAYENNE_IN(8)
 // Modifier le temps douverture pour solenoide2
 CAYENNE_IN(9)
 {
-  solenoide2OpenDuration = getValue.asInt();
+  //solenoide2OpenDuration = getValue.asInt();
 }
 
 // Ouvrir solenoide 1
 CAYENNE_IN(1)
 {
+  Serial.println("YO JE POMPE SOL 1");
   digitalWrite(solenoide1, LOW);
   solenoide1OpenTime = millis();
   solenoide1Open = true;
@@ -169,9 +179,9 @@ CAYENNE_IN(1)
 // Ouvrir solenoide 2
 CAYENNE_IN(2)
 {
-  digitalWrite(solenoide2, LOW);
-  solenoide2OpenTime = millis();
-  solenoide2Open = true;
+  //digitalWrite(solenoide2, LOW);
+  //solenoide2OpenTime = millis();
+  //solenoide2Open = true;
 }
 /***************************************** http update function *************************************/
 // This function checks the web server to see if a new version number is available, if so, it updates with the new firmware (binary)
@@ -229,42 +239,47 @@ long microsecondsToCentimeters(long microseconds)
 
 /********************************************** Water level reservoir suspendu ******************************/
 void checkWaterLevelSuspendu() {
+  Serial.println("Je check niveau d'eau suspendu");
   // Si le float switch en haut n'est pas a LOW et qu'il n'est pas entrain de pomper, commence à pomper
   if (digitalRead(floatSuspendu) && !pumpingState) {
+    Serial.println("Il manque d'eau et je pompe pas");
     // Verifie qu'il a assez d'eau dans le bac du bas avant de commencer à pomper
     if (!digitalRead(floatReservoirPrincipal)) {
+      Serial.println("Il a assez d'eau en bas, je pompe!");
       pumpingState = true;
       digitalWrite(pinPompe, LOW);      // Activer le relais pour pomper
+      floatSuspenduActivation = millis();
     }
-  } else if (!digitalRead(floatSuspendu) && pumpingState == true) {
+  } else if (pumpingState == true) {
     // Si le float switch est a LOW et que c'est entrain de pomper, attends le temps specifié et arrete de pomper
     // Si on a pas active le warning, active le
-    if (floatPumpingActivated == false) {
-      // Sinon, active le warning qu'on a détecté et prends le temps de début
-      floatSuspenduActivation = millis();
-      floatPumpingActivated = true;
-    } else if (millis() - floatSuspenduActivation >= tempsDePompage*1000 || digitalRead(floatSuspendu) == false){
+    Serial.println("Je pompe et je verifie");
+    // Sinon, active le warning qu'on a détecté et prends le temps de début
+    if (millis() - floatSuspenduActivation >= tempsDePompage*1000 || digitalRead(floatSuspendu) == false){
       // sinon, si ca fait assez longtemps qu'on pompe, arrete le pompage pi reset les bools
       digitalWrite(pinPompe, HIGH);
       pumpingState = false;
-      floatPumpingActivated = false;
+      Serial.println("J'arrete de pomper!");
     }
   }
 }
 
 /************************************************** solenoides ***************************************************/
 void checkSolenoide1() {
+  //Serial.println("Je check solenoide 1");
   // Si solenoide 1 a ete ouvert depuis assez longtemps ET i lest ouvert, le fermer
   if (millis() - solenoide1OpenTime >= solenoide1OpenDuration*1000 && solenoide1Open == true) {
     digitalWrite(solenoide1, HIGH);
+    //Serial.println("Fermer solenoide 1");
     solenoide1Open = false;
   }
 }
 
+/*
 void checkSolenoide2() {
   // Si solenoide 2 a ete ouvert depuis assez longtemps ET il est ouvert, le fermer
   if (millis() - solenoide2OpenTime >= solenoide2OpenDuration*1000 && solenoide2Open == true) {
     digitalWrite(solenoide2, HIGH);
     solenoide2Open = false;
   }
-}
+} */
