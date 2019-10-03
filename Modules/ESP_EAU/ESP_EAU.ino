@@ -38,11 +38,11 @@ char clientID[] = "dd26c560-1904-11e9-b82d-f12a91579eed";
 #define VIRTUAL_CHANNEL 8                                                       // Secondes a ouvrir solenoide 1
 #define VIRTUAL_CHANNEL 9                                                       // Secondes a ouvrir solenoide 2
 
-#define VIRTUAL_CHANNEL 10                                                       // Luminosite analog
+#define VIRTUAL_CHANNEL 12                                                       // Luminosite analog
 
 /*********************************Donnees********************************************/
 // Temps entre les prises de donnees (en secondes)
-#define DELAIS_PRISE_DONNEES 10 // Secondes
+#define DELAIS_PRISE_DONNEES 1 // Secondes
 unsigned long lastMillis = 0;   // Dernière prise de mesure
 
 // Float sensors
@@ -133,8 +133,8 @@ void loop() {
       checkWaterLevelUltrason();  // Check Water level and send to cayenne
       //checkWaterLevelSuspendu();  // Check Water level suspendu
 
-      Cayenne.virtualWrite(10, analogRead(luminositePin));
-
+      Cayenne.virtualWrite(12, analogRead(luminositePin));
+      Serial.print("Lecture lumiere: ");Serial.println(analogRead(luminositePin));
       Cayenne.virtualWrite(98,FW_VERSION);                                         // Send the version number to Cayenne
 
       Cayenne.loop();
