@@ -1,0 +1,180 @@
+//BIUS Projet VG360
+//ESP8266-03_Mécanique
+//2020-01-12
+
+/************************************** OTA *****************************************/
+const int FW_VERSION = 1;                   // Version number, don't forget to update this on changes
+#include <ESP8266HTTPClient.h>
+#include <ESP8266httpUpdate.h>
+// Note the raw.githubuserconent, this allows us to access the contents at the url, not the webpage itself
+// IP adress to the subfolder containing the binary and version number for this specific device
+const char* fwURLBase = "https://raw.githubusercontent.com/BIUS-USherbrooke/BIUS_Domotique/ESP_SERRE/Modules/ESP_SERRE/ESP_SERRE"; 
+
+//************************************** CAYENNE *****************************************/
+#define CAYENNE_DEBUG
+#define CAYENNE_PRINT Serial
+#include <CayenneMQTTESP8266.h>
+
+// If too many errors when connecting, deep sleep (which will restart the esp)
+// PIN D0 OF THE NODEMCU MUST BE CONNECTed TO THE RST PIN
+int failedConnections = 0;
+#define SLEEP_TIME 20e6
+
+// WiFi network info.
+//char ssid[] = "BELL085_EXT";
+//char wifiPassword[] = "respectsvp";
+char ssid[] = "Sherby_patate_;D_2.4GHz";
+char wifiPassword[] = "1545Sherbrooke007";
+
+// Cayenne authentication info. This should be obtained from the Cayenne Dashboard.
+char username[] = "75b6d920-cb5b-11e8-8a08-61f9e5c4f140";
+char password[] = "13a3664856850223f1994846cd5aa6d668226da9";
+char clientID[] = "1bf6e2b0-e300-11e8-9c33-75e6b356cec4";
+
+// Channels cayenne
+#define VIRTUAL_CHANNEL 98              // Version number
+#define VIRTUAL_CHANNEL 0               // Channel to force an OTA update
+
+#define VIRTUAL_CHANNEL 1               // Cycle évacuation Max
+#define VIRTUAL_CHANNEL 2               // Cycle recirculation
+#define VIRTUAL_CHANNEL 3               // Cycle recirculation gradateur 10-25-50-75-100%
+
+#define VIRTUAL_CHANNEL 10              // Tension Batterie
+#define VIRTUAL_CHANNEL 11              // Facteur calibration Tension
+
+#define VIRTUAL_CHANNEL 20              // Relais Lumière
+
+#define VIRTUAL_CHANNEL 30              // Relais VRC
+#define VIRTUAL_CHANNEL 31              // Relais Ventilateur Mural
+#define VIRTUAL_CHANNEL 32              // Fan DC 01
+#define VIRTUAL_CHANNEL 33              // Fan DC 02
+
+/*********************************Donnees********************************************/
+// Temps entre les prises de donnees (en secondes)
+#define DELAIS_PRISE_DONNEES 10 // Secondes
+unsigned long lastMillis = 0;   // Dernière prise de mesure
+
+//Cycles Ventilation
+unsigned long CycleEvaxMax = 0;   // Cyrcle Évacuation maximal ventilation
+unsigned long CycleRecircul = 25; // Cyrcle recirculation ventilation
+
+//Entrée/Sorties sensor
+int Voltpin = A0;                 // Entrée Tension batterie
+float RatioFactor=5.76*0.61;      // Resistors Ration Factor
+float FactCalib = 1.0;            // Facteur calibration Tension
+
+#define LightPin D8               // Sortie relais Lumière
+#define MecPin1 D1                // Sortie relais VRC
+#define MecPin2 D2                // Sortie relais Ventilateur
+#define MecPin3 D3                // Sortie relais Fan DC 01
+#define MecPin4 D4                // Sortie relais Fan DC 02
+
+void setup() {
+  Serial.begin(9600);
+  delay(10);
+  Cayenne.begin(username, password, clientID, ssid, wifiPassword);
+  
+  //if CycleRecircul = 25 
+    
+  pinMode(LightPin, OUTPUT);      //Contrôle Lumière
+  digitalWrite(LightPin,HIGH);    //Contrôle Lumière
+
+  pinMode(MecPin1, OUTPUT);       //Contrôle VRC
+  digitalWrite(MecPin1,HIGH);     //Contrôle VRC
+
+  pinMode(MecPin2, OUTPUT);       //Contrôle Ventilateur
+  digitalWrite(MecPin2,HIGH);     //Contrôle Ventilateur
+
+  pinMode(MecPin3, OUTPUT);       //Contrôle Fan DC 01
+  digitalWrite(MecPin3,HIGH);     //Contrôle Fan DC 01
+
+  pinMode(MecPin4, OUTPUT);       //Contrôle Fan DC 02
+  digitalWrite(MecPin4,HIGH);     //Contrôle Fan DC 02  
+} //Fin Void Setup
+
+void loop() {
+  //Statut de la connection
+    if (WiFi.status() == WL_CONNECTED) {
+     Serial.println("ESP8266 connecté au wifi");
+    Cayenne.loop();
+          
+    // S'il y a eu assez de temps, republier les données
+    if (millis() - lastMillis > DELAIS_PRISE_DONNEES*1000) {
+      lastMillis = millis();
+
+    // Envoyer valeur tension batterie
+        float Tvoltage=0.0;
+        float Vvalue=0.0,Rvalue=0.0;
+        Serial.println(FactCalib);
+        //Moyenne de 10 mesures de tension 
+        for(unsigned int i=0;i<10;i++){
+        Vvalue=Vvalue+analogRead(Voltpin);      //Read analog Voltage
+        delay(5);                               //ADC stable
+        }         
+        Vvalue=(float)Vvalue/10.0;              //Find average of 10 values
+        Rvalue=(float) (Vvalue/1023.0)*5;         //Convert Voltage in 5v factor
+        Tvoltage=Rvalue*RatioFactor*FactCalib;  //Find original voltage by multiplying with factor    
+        Cayenne.virtualWrite(1, Tvoltage,"batt","v");}
+        }
+ else {
+    failedConnections++;
+    // Si pas connecté plus de 10 fois, restart
+    if (failedConnections > 10) {
+      Serial.println("No wifi connection, restarting.");
+      ESP.restart();
+    } else {
+      // Sinon, delay 1000
+      delay(1000);
+    }
+  }
+    delay(5000);    
+} //Fin Void Loop
+
+/***************************************** Cayenne Ins **********************************************/
+    // Check for updates on web server
+    CAYENNE_IN(0)
+    {checkForUpdates();}
+    
+    CAYENNE_IN(3)      // Cycle recirculation gradateur 10-25-50-75-100%
+    {CycleRecircul = getValue.asInt();}
+
+    CAYENNE_IN(11)     // Facteur calibration Tension
+    {FactCalib = getValue.asInt();}    
+    
+    CAYENNE_IN(20)    //Contrôle du relais Lumière
+    {digitalWrite(LightPin,!getValue.asInt()); }
+
+    CAYENNE_IN(30)    //Contrôle du relais VRC
+    {digitalWrite(MecPin1,!getValue.asInt()); }
+
+    CAYENNE_IN(31)    //Contrôle du relais Ventilateur
+    {digitalWrite(MecPin2,!getValue.asInt()); }
+
+    CAYENNE_IN(32)    //Contrôle du relais Fan DC
+    {digitalWrite(MecPin3,!getValue.asInt()); }
+
+    CAYENNE_IN(33)    //Contrôle du relais Fan DC
+    {digitalWrite(MecPin4,!getValue.asInt()); }    
+
+/***************************************** http update function *************************************/
+// This function checks the web server to see if a new version number is available, if so, it updates with the new firmware (binary)
+void checkForUpdates() {
+  String fwImageURL = String(fwURLBase);
+      fwImageURL.concat( ".ino.nodemcu.bin" );                                              // Adds the url for the binary
+      Serial.println(fwImageURL);
+      // Update the esp with the new binary, third is the certificate of the site
+      t_httpUpdate_return ret = ESPhttpUpdate.update( fwImageURL , "", "CC:AA:48:48:66:46:0E:91:53:2C:9C:7C:23:2A:B1:74:4D:29:9D:33");             
+      delay(50);
+
+      switch(ret) 
+      { case HTTP_UPDATE_FAILED:
+          Serial.printf("HTTP_UPDATE_FAILED Error (%d): %s", ESPhttpUpdate.getLastError(), ESPhttpUpdate.getLastErrorString().c_str());
+          break;
+
+        case HTTP_UPDATE_NO_UPDATES:
+          Serial.println("no updates");
+          break; }
+{
+  CAYENNE_LOG("CAYENNE_IN_DEFAULT(%u) - %s, %s", request.channel, getValue.getId(), getValue.asString());
+  //Process message here. If there is an error set an error message using getValue.setError(), e.g getValue.setError("Error message");
+}
